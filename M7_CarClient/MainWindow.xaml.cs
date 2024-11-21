@@ -1,6 +1,7 @@
 ﻿using M7_CarManager.Models;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Net.Http;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -32,19 +33,67 @@ namespace M7_CarClient
             }
             set 
             { 
-                _actualCar = value.GetCopy(); 
+                _actualCar = value?.GetCopy(); 
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ActualCar)));
             }
         }
 
+        HttpClient _httpClient;
+
         public MainWindow()
         {
             InitializeComponent();
-            Cars = new ObservableCollection<Car>();
-            Cars.Add(new Car { Model = "Peugeot 406", PlateNumber = "ABC-123", Price = 6000 });
-            Cars.Add(new Car { Model = "Peugeot 306", PlateNumber = "HFG-556", Price = 3000 });
-            Cars.Add(new Car { Model = "Peugeot 3008", PlateNumber = "TZH-256", Price = 16000 });
+
+            _httpClient = new HttpClient();
+            _httpClient.BaseAddress = new Uri("http://localhost:5041");
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Accept.Add(
+                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+            Task.Run(async () =>
+            {
+                Cars = new ObservableCollection<Car>(await GetCars());
+            })
+            .Wait();
+            
             this.DataContext = this;
+        }
+
+        async Task Refresh()
+        {
+            Cars = new ObservableCollection<Car>(await GetCars());
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Cars)));
+        }
+
+        async Task<IEnumerable<Car>> GetCars()
+        {
+            var response = await _httpClient.GetAsync("/car");
+            if(response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsAsync<IEnumerable<Car>>();
+            }
+            throw new Exception("something went wrong...");
+        }
+
+        private async void Delete_Click(object sender, RoutedEventArgs e)
+        {
+            var response = await _httpClient.DeleteAsync("/car/" + ActualCar.Id);
+            response.EnsureSuccessStatusCode();
+            await Refresh();
+        }
+
+        private async void Create_Click(object sender, RoutedEventArgs e)
+        {
+            var response = await _httpClient.PostAsJsonAsync<Car>("/car", ActualCar);
+            response.EnsureSuccessStatusCode();
+            await Refresh();
+        }
+
+        private async void Update_Click(object sender, RoutedEventArgs e)
+        {
+            var response = await _httpClient.PutAsJsonAsync<Car>("/car", ActualCar);
+            response.EnsureSuccessStatusCode();
+            await Refresh();
         }
     }
 }

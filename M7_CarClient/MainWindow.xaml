@@ -29,9 +29,9 @@
             <TextBox Text="{Binding PlateNumber}" Padding="10" />
             <Label Content="Price" Background="LightGoldenrodYellow" Padding="10" />
             <TextBox Text="{Binding Price}" Padding="10" />
-            <Button Content="Save current" Padding="10" Margin="10" />
-            <Button Content="Add current" Padding="10" Margin="10" />
-            <Button Content="Delete current" Padding="10" Margin="10" />
+            <Button Content="Save current" Padding="10" Margin="10" Click="Update_Click" />
+            <Button Content="Add current" Padding="10" Margin="10" Click="Create_Click"/>
+            <Button Content="Delete current" Padding="10" Margin="10" Click="Delete_Click" />
         </StackPanel>
     </Grid>
 </Window>
