@@ -29,6 +29,7 @@ namespace M7_CarManager.Controllers
         [HttpPost]
         public void AddCar([FromBody] Car car)
         {
+            car.Id = Guid.NewGuid().ToString();
             _cars.Add(car);
         }
 
