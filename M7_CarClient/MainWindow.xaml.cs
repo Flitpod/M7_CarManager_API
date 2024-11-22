@@ -1,4 +1,5 @@
 ﻿using M7_CarManager.Models;
+using Microsoft.AspNetCore.SignalR.Client;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net.Http;
@@ -39,6 +40,8 @@ namespace M7_CarClient
         }
 
         HttpClient _httpClient;
+        HubConnection _hubConnection;
+        Random _random;
 
         public MainWindow()
         {
@@ -56,6 +59,36 @@ namespace M7_CarClient
             })
             .Wait();
 
+            // configure hub client
+            _random = new Random();
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5041/events")
+                .Build();
+            _hubConnection.Closed += async (error) =>
+            {
+                await Task.Delay(_random.Next(0, 5) * 1000);
+                await _hubConnection.StartAsync();
+            };
+
+            // register for carCreated server side event
+            _hubConnection.On<Car>("carCreated", async car => await Refresh());
+            // register for carUpdated server side event
+            _hubConnection.On<Car>("carUpdated", async car => await Refresh());
+            // register for carDeleted server side event
+            _hubConnection.On<string>("carDeleted", (id) =>
+            {
+                var carToDelete = Cars?.FirstOrDefault(c => c.Id == id);
+                // only the UI thread can modify the collection to see the modified collection on the GUI
+                this.Dispatcher.Invoke(() =>
+                {
+                    Cars?.Remove(carToDelete);
+                });
+            });
+
+            // start hub connection
+            Task.Run(async () => await _hubConnection.StartAsync());
+
+            // set datacontext of mainwindow
             this.DataContext = this;
         }
 
@@ -78,33 +111,32 @@ namespace M7_CarClient
         private async void Delete_Click(object sender, RoutedEventArgs e)
         {
             var response = await _httpClient.DeleteAsync("/car/" + ActualCar.Id);
-            response.EnsureSuccessStatusCode();
-            await Refresh();
+            ShowIfError(response);
         }
 
         private async void Create_Click(object sender, RoutedEventArgs e)
         {
-            var response = await _httpClient.PostAsJsonAsync<Car>("/car", ActualCar);
-            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-            {
-                var error = await response.Content.ReadAsAsync<ErrorModel>();
-                MessageBox.Show(
-                    error.Message + " at:" + error.Date.ToShortTimeString(),
-                    "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-            else if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                await Refresh();
-            }
+            var response = await _httpClient.PostAsJsonAsync("/car", ActualCar);
+            ShowIfError(response);
         }
 
         private async void Update_Click(object sender, RoutedEventArgs e)
         {
-            var response = await _httpClient.PutAsJsonAsync<Car>("/car", ActualCar);
-            response.EnsureSuccessStatusCode();
-            await Refresh();
+            var response = await _httpClient.PutAsJsonAsync("/car", ActualCar);
+            ShowIfError(response);
+        }
+
+        private async void ShowIfError(HttpResponseMessage response)
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var error = await response.Content.ReadAsAsync<ErrorModel>();
+                MessageBox.Show(
+                    messageBoxText: $"{error.Message} at: {error.Date}",
+                    caption: "Error",
+                    button: MessageBoxButton.OK,
+                    icon: MessageBoxImage.Error);
+            }
         }
     }
 }
