@@ -21,19 +21,19 @@ namespace M7_CarClient
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         public ObservableCollection<Car> Cars { get; set; }
-        
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         private Car _actualCar;
         public Car ActualCar
         {
-            get 
-            { 
-                return _actualCar; 
+            get
+            {
+                return _actualCar;
             }
-            set 
-            { 
-                _actualCar = value?.GetCopy(); 
+            set
+            {
+                _actualCar = value?.GetCopy();
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ActualCar)));
             }
         }
@@ -55,7 +55,7 @@ namespace M7_CarClient
                 Cars = new ObservableCollection<Car>(await GetCars());
             })
             .Wait();
-            
+
             this.DataContext = this;
         }
 
@@ -68,7 +68,7 @@ namespace M7_CarClient
         async Task<IEnumerable<Car>> GetCars()
         {
             var response = await _httpClient.GetAsync("/car");
-            if(response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadAsAsync<IEnumerable<Car>>();
             }
@@ -85,8 +85,19 @@ namespace M7_CarClient
         private async void Create_Click(object sender, RoutedEventArgs e)
         {
             var response = await _httpClient.PostAsJsonAsync<Car>("/car", ActualCar);
-            response.EnsureSuccessStatusCode();
-            await Refresh();
+            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var error = await response.Content.ReadAsAsync<ErrorModel>();
+                MessageBox.Show(
+                    error.Message + " at:" + error.Date.ToShortTimeString(),
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                await Refresh();
+            }
         }
 
         private async void Update_Click(object sender, RoutedEventArgs e)
