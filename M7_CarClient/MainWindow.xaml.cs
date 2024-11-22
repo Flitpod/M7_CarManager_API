@@ -21,10 +21,14 @@ namespace M7_CarClient
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        // HTTPClient and SignalR members
+        HttpClient _httpClient;
+        HubConnection _hubConnection;
+        Random _random;
+
+        // ViewModel should be contained members
         public ObservableCollection<Car> Cars { get; set; }
-
         public event PropertyChangedEventHandler? PropertyChanged;
-
         private Car _actualCar;
         public Car ActualCar
         {
@@ -39,26 +43,37 @@ namespace M7_CarClient
             }
         }
 
-        HttpClient _httpClient;
-        HubConnection _hubConnection;
-        Random _random;
-
         public MainWindow()
         {
             InitializeComponent();
 
+            RestClient_Init();
+            CarsCollection_Init();
+            SignalRHub_Init();           
+
+            // set datacontext of mainwindow
+            this.DataContext = this;
+        }
+
+        // init methods
+        private void RestClient_Init()
+        {
             _httpClient = new HttpClient();
             _httpClient.BaseAddress = new Uri("http://localhost:5041");
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(
                 new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-
+        }
+        private void CarsCollection_Init()
+        {
             Task.Run(async () =>
             {
                 Cars = new ObservableCollection<Car>(await GetCars());
             })
-            .Wait();
-
+           .Wait();
+        }
+        private void SignalRHub_Init()
+        {
             // configure hub client
             _random = new Random();
             _hubConnection = new HubConnectionBuilder()
@@ -70,6 +85,13 @@ namespace M7_CarClient
                 await _hubConnection.StartAsync();
             };
 
+            SignalRClient_RegisterTopics();
+
+            // start hub connection
+            Task.Run(async () => await _hubConnection.StartAsync());
+        }
+        private void SignalRClient_RegisterTopics()
+        {
             // register for carCreated server side event
             _hubConnection.On<Car>("carCreated", async car => await Refresh());
             // register for carUpdated server side event
@@ -84,21 +106,17 @@ namespace M7_CarClient
                     Cars?.Remove(carToDelete);
                 });
             });
-
-            // start hub connection
-            Task.Run(async () => await _hubConnection.StartAsync());
-
-            // set datacontext of mainwindow
-            this.DataContext = this;
         }
 
-        async Task Refresh()
+
+        // helper methods
+        private async Task Refresh()
         {
             Cars = new ObservableCollection<Car>(await GetCars());
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Cars)));
         }
 
-        async Task<IEnumerable<Car>> GetCars()
+        private async Task<IEnumerable<Car>> GetCars()
         {
             var response = await _httpClient.GetAsync("/car");
             if (response.IsSuccessStatusCode)
@@ -107,7 +125,20 @@ namespace M7_CarClient
             }
             throw new Exception("something went wrong...");
         }
+        private async void ShowIfError(HttpResponseMessage response)
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var error = await response.Content.ReadAsAsync<ErrorModel>();
+                MessageBox.Show(
+                    messageBoxText: $"{error.Message} at: {error.Date}",
+                    caption: "Error",
+                    button: MessageBoxButton.OK,
+                    icon: MessageBoxImage.Error);
+            }
+        }
 
+        // button click event handlers
         private async void Delete_Click(object sender, RoutedEventArgs e)
         {
             var response = await _httpClient.DeleteAsync("/car/" + ActualCar.Id);
@@ -126,17 +157,5 @@ namespace M7_CarClient
             ShowIfError(response);
         }
 
-        private async void ShowIfError(HttpResponseMessage response)
-        {
-            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-            {
-                var error = await response.Content.ReadAsAsync<ErrorModel>();
-                MessageBox.Show(
-                    messageBoxText: $"{error.Message} at: {error.Date}",
-                    caption: "Error",
-                    button: MessageBoxButton.OK,
-                    icon: MessageBoxImage.Error);
-            }
-        }
     }
 }
