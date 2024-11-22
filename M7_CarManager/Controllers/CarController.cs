@@ -29,17 +29,17 @@ namespace M7_CarManager.Controllers
         [HttpPost]
         public IActionResult AddCar([FromBody] Car car)
         {
-            car.Id = Guid.NewGuid().ToString();
-            if (car.PlateNumber.Length != 7)
-            {
-                return BadRequest(new ErrorModel()
-                {
-                    Message = "Platenumber format is invalid",
-                    Date = DateTime.Now,
-                });
-            }
-            _cars.Add(car);
+            _cars.Add(CarHelper(car));
             return Ok(car);
+        }
+
+        private Car CarHelper(Car car) // would be a logic method, can throw exception
+        {
+            if(car.PlateNumber.Length != 7)
+            {
+                throw new ArgumentException("Platenumber format is invalid");
+            }
+            return car;
         }
 
         [HttpPut]
