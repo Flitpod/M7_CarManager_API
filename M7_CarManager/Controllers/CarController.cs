@@ -1,5 +1,7 @@
-﻿using M7_CarManager.Models;
+﻿using M7_CarManager.Hubs;
+using M7_CarManager.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace M7_CarManager.Controllers
 {
@@ -14,6 +16,13 @@ namespace M7_CarManager.Controllers
             new Car { Model = "Opel Astra", PlateNumber = "DDD-333", Price = 2000 },
         };
 
+        IHubContext<EventHub> _eventHub;
+
+        public CarController(IHubContext<EventHub> eventHub)
+        {
+            _eventHub = eventHub;
+        }
+
         [HttpGet]
         public IEnumerable<Car> GetCars()
         {
@@ -27,9 +36,10 @@ namespace M7_CarManager.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddCar([FromBody] Car car)
+        public async Task<IActionResult> AddCar([FromBody] Car car)
         {
             _cars.Add(CarHelper(car));
+            await _eventHub.Clients.All.SendAsync("carCreated", car);
             return Ok(car);
         }
 
@@ -43,28 +53,32 @@ namespace M7_CarManager.Controllers
         }
 
         [HttpPut]
-        public void UpdateCar([FromBody] Car car) 
+        public async Task<IActionResult> UpdateCar([FromBody] Car car) 
         {
             var oldCar = GetCar(car.Id);
-            if (oldCar == null)
+            if (GetCar(car.Id) == null)
             {
-                throw new Exception("Id does not found!");
+                throw new ArgumentException("Id does not found!");
             }
             foreach (var prop in typeof(Car).GetProperties().Where(p => p.Name != "Id"))
             {
                 prop.SetValue(oldCar, prop.GetValue(car));
             }
+            await _eventHub.Clients.All.SendAsync("carUpdated", oldCar);
+            return Ok(oldCar);
         }
 
         [HttpDelete("{id}")]
-        public void DeleteCar(string id)
+        public async Task<IActionResult> DeleteCar(string id)
         {
             var deleteCar = GetCar(id);
             if (deleteCar == null)
             {
-                throw new Exception("Id does not found!");
+                throw new ArgumentException("Id does not found!");
             }
             _cars.Remove(deleteCar);
+            await _eventHub.Clients.All.SendAsync("carDeleted", id);
+            return Ok(id);
         }
     }
 }
