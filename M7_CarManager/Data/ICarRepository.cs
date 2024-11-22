@@ -9,5 +9,6 @@ namespace M7_CarManager.Data
         IEnumerable<Car> Read();
         Car? Read(string id);
         void Update(Car car);
+        void Update(Car car, out Car old);
     }
 }

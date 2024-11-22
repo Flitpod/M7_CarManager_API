@@ -42,6 +42,15 @@ namespace M7_CarManager.Data
             }
         }
 
+        public void Update(Car car, out Car old)
+        {
+            old = IsInCars(car.Id);
+            foreach (var prop in typeof(Car).GetProperties().Where(p => p.Name != "Id"))
+            {
+                prop.SetValue(old, prop.GetValue(car));
+            }
+        }
+
         public void Delete(string id)
         {
             var carToDelete = IsInCars(id);
