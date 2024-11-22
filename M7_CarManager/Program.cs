@@ -1,10 +1,11 @@
+using M7_CarManager.Data;
 using M7_CarManager.Filters;
 using M7_CarManager.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Services.AddSingleton<ICarRepository, CarRepository>();
 builder.Services.AddControllers(opt =>
 {
     opt.Filters.Add<ApiExceptionFilter>();
