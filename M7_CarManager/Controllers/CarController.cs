@@ -27,10 +27,19 @@ namespace M7_CarManager.Controllers
         }
 
         [HttpPost]
-        public void AddCar([FromBody] Car car)
+        public IActionResult AddCar([FromBody] Car car)
         {
             car.Id = Guid.NewGuid().ToString();
+            if (car.PlateNumber.Length != 7)
+            {
+                return BadRequest(new ErrorModel()
+                {
+                    Message = "Platenumber format is invalid",
+                    Date = DateTime.Now,
+                });
+            }
             _cars.Add(car);
+            return Ok(car);
         }
 
         [HttpPut]
