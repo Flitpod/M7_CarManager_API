@@ -1,6 +1,7 @@
 ﻿using M7_CarManager.Data;
 using M7_CarManager.Hubs;
 using M7_CarManager.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
@@ -20,6 +21,7 @@ namespace M7_CarManager.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public IEnumerable<Car> GetCars()
         {
             return _carRepository.Read();
