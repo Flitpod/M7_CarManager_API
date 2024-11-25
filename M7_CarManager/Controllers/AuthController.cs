@@ -15,10 +15,12 @@ namespace M7_CarManager.Controllers
     public class AuthController:ControllerBase
     {
         private readonly UserManager<AppUser> _userManager;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(UserManager<AppUser> userManager)
+        public AuthController(UserManager<AppUser> userManager, IConfiguration configuration)
         {
             _userManager = userManager;
+            _configuration = configuration;
         }
 
         [HttpPost]
@@ -35,7 +37,7 @@ namespace M7_CarManager.Controllers
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
-            var signInKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("verylongverysecretcodeverylongverysecretcode"));
+            var signInKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["SecretKey"]));
             var token = new JwtSecurityToken(
                 issuer: "http://www.security.org",
                 audience: "http://www.security.org",

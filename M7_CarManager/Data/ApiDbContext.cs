@@ -8,9 +8,10 @@ namespace M7_CarManager.Data
 {
     public class ApiDbContext : IdentityDbContext<AppUser>
     {
-        public ApiDbContext(DbContextOptions<ApiDbContext> opt) : base(opt)
+        private readonly IConfiguration _configuration;
+        public ApiDbContext(DbContextOptions<ApiDbContext> opt, IConfiguration configuration) : base(opt)
         {
-
+            _configuration = configuration;
         }
 
         public DbSet<AppUser> AppUsers { get; set; }
@@ -28,14 +29,14 @@ namespace M7_CarManager.Data
             AppUser user = new AppUser()
             {
                 Id = Guid.NewGuid().ToString(),
-                Email = "coding_helper@outlook.com",
+                Email = _configuration["Email"],
                 EmailConfirmed = true,
-                UserName = "coding_helper@outlook.com",
-                FirstName = "Coding",
-                LastName = "Helper",
-                NormalizedUserName = "CODING_HELPER@OUTLOOK.COM",
+                UserName = _configuration["UserName"],
+                FirstName = _configuration["FirstName"],
+                LastName = _configuration["LastName"],
+                NormalizedUserName = _configuration["NormalizedUserName"],
             };
-            user.PasswordHash = passwordHasher.HashPassword(user, "password1");
+            user.PasswordHash = passwordHasher.HashPassword(user, _configuration["Password"]);
 
             builder.Entity<AppUser>().HasData(user);
 
