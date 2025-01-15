@@ -20,7 +20,7 @@ builder.Services.AddControllers(opt =>
 // Add DbContext
 builder.Services.AddDbContext<ApiDbContext>(options =>
 {
-    options.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=CarManagerJWT;Trusted_Connection=True;MultipleActiveResultSets=True");
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
 // Add user and role management
@@ -49,7 +49,7 @@ builder.Services.AddAuthentication(option =>
         ValidateAudience = true,
         ValidAudience = "http://www.security.org",
         ValidIssuer = "http://www.security.org",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("verylongverysecretcodeverylongverysecretcode"))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("SecretKey")))
     };
 });
 
