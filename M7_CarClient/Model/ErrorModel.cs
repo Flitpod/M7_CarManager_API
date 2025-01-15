@@ -1,4 +1,4 @@
-﻿namespace M7_CarClient
+﻿namespace M7_CarClient.Model
 {
     public class ErrorModel
     {

@@ -1,4 +1,4 @@
-﻿using M7_CarManager.Models;
+﻿using M7_CarClient.Model;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Collections.ObjectModel;
 using System.ComponentModel;

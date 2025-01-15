@@ -1,4 +1,4 @@
-﻿namespace M7_CarManager.Models
+﻿namespace M7_CarClient.Model
 {
     public class Car
     {
@@ -14,7 +14,7 @@
 
         internal Car GetCopy()
         {
-            return new Car { Id = Id, Model = Model, PlateNumber = PlateNumber, Price = Price }; 
+            return new Car { Id = Id, Model = Model, PlateNumber = PlateNumber, Price = Price };
         }
     }
 }
