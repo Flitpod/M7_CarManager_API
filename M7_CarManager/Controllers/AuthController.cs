@@ -1,5 +1,6 @@
 ﻿using M7_CarClient.Model;
 using M7_CarManager.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -33,7 +34,12 @@ namespace M7_CarManager.Controllers
                 return Unauthorized();
             }
 
-            var claims = new List<Claim> { new Claim(JwtRegisteredClaimNames.Sub, user.UserName) };
+            var claims = new List<Claim> 
+            { 
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+            };
             foreach (var role in await _userManager.GetRolesAsync(user))
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
@@ -69,6 +75,51 @@ namespace M7_CarManager.Controllers
 
             await _userManager.CreateAsync(user, model.Password);
             await _userManager.AddToRoleAsync(user, "Customer");
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetUserInfos()
+        {
+            var user = _userManager.Users.FirstOrDefault(u => u.UserName == this.User.Identity.Name);
+            return Ok(new
+            {
+                UserName = user.UserName,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                PhotoContentType = user.PhotoContentType,
+                PhotoData = user.PhotoData,
+                Roles = await _userManager.GetRolesAsync(user),
+            });
+        }
+
+        [Authorize]
+        [HttpDelete]
+        public async Task<IActionResult> DeleteMyself()
+        {
+            var user = _userManager.Users.FirstOrDefault(u => u.UserName == this.User.Identity.Name);
+            var result = await _userManager.DeleteAsync(user);
+            if (result.Succeeded)
+            {
+                return Ok();
+            }
+            return BadRequest();
+        }
+
+        [Authorize]
+        [HttpPatch]
+        public async Task<IActionResult> UpdateProfile([FromBody] RegisterViewModel model)
+        {
+            var user = _userManager.Users.FirstOrDefault(u => u.UserName == this.User.Identity.Name);
+            user.Email = model.Email;
+            user.UserName = model.UserName;
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.PhotoContentType = model.PhotoContentType;
+            user.PhotoData = model.PhotoData;
+            await _userManager.UpdateAsync(user);
             return Ok();
         }
     }
