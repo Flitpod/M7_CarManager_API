@@ -1,0 +1,30 @@
+﻿<Window x:Class="M7_CarClient.Windows.RegisterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:M7_CarClient.Windows"
+        mc:Ignorable="d"
+        Title="RegisterWindow" Height="530" Width="800">
+    <StackPanel>
+        <Label Background="LightGoldenrodYellow" Padding="10">First name</Label>
+        <TextBox x:Name="tb_firstName" Padding="10" />
+
+        <Label Background="LightGoldenrodYellow" Padding="10">Last name</Label>
+        <TextBox x:Name="tb_lastName" Padding="10" />
+
+        <Label Background="LightGoldenrodYellow" Padding="10">Username</Label>
+        <TextBox x:Name="tb_userName" Padding="10" />
+
+        <Label Background="LightGoldenrodYellow" Padding="10">Email</Label>
+        <TextBox x:Name="tb_Email" Padding="10" />
+
+        <Label Background="LightGoldenrodYellow" Padding="10">Password</Label>
+        <PasswordBox x:Name="tb_password" Padding="10" />
+
+        <Label Background="LightGoldenrodYellow" Padding="10">Password again</Label>
+        <PasswordBox x:Name="tb_passwordAgain" Padding="10" />
+
+        <Button Content="Register" Padding="10" Click="Button_Register_Click" />
+    </StackPanel>
+</Window>
