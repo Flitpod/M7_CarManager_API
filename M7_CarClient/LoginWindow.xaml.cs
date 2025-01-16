@@ -29,7 +29,7 @@ namespace M7_CarClient
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
             HttpClient client = new HttpClient();
-            client.BaseAddress = new Uri("http://localhost:5041");
+            client.BaseAddress = new Uri("http://localhost:5041/");
             client.DefaultRequestHeaders.Accept.Add(
                 new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json")
             );
@@ -43,9 +43,8 @@ namespace M7_CarClient
             var token = await response.Content.ReadAsAsync<TokenModel>();
             token.Expiration = token.Expiration.ToLocalTime();
 
-            MessageBox.Show(token.Expiration.ToShortTimeString());
-            //MainWindow mainWindow = new MainWindow();
-            //mainWindow.ShowDialog();
+            MainWindow mainWindow = new MainWindow(token);
+            mainWindow.ShowDialog();
         }
     }
 }

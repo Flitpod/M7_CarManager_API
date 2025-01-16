@@ -43,11 +43,11 @@ namespace M7_CarClient
             }
         }
 
-        public MainWindow()
+        public MainWindow(TokenModel token)
         {
             InitializeComponent();
 
-            RestClient_Init();
+            RestClient_Init(token);
             CarsCollection_Init();
             SignalRHub_Init();           
 
@@ -56,13 +56,17 @@ namespace M7_CarClient
         }
 
         // init methods
-        private void RestClient_Init()
+        private void RestClient_Init(TokenModel token)
         {
             _httpClient = new HttpClient();
             _httpClient.BaseAddress = new Uri("http://localhost:5041");
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(
                 new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+            // this will attach the token for every request to Car controller API
+            _httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
         }
         private void CarsCollection_Init()
         {
