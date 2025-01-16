@@ -1,4 +1,5 @@
-﻿using M7_CarManager.Models;
+﻿using M7_CarClient.Model;
+using M7_CarManager.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -50,6 +51,25 @@ namespace M7_CarManager.Controllers
                 token = new JwtSecurityTokenHandler().WriteToken(token),
                 expiration = token.ValidTo,
             });
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> InsertUser([FromBody] RegisterViewModel model)
+        {
+            var user = new AppUser()
+            {
+                Email = model.Email,
+                UserName = model.UserName,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                PhotoContentType = model.PhotoContentType,
+                PhotoData = model.PhotoData,
+            };
+
+            await _userManager.CreateAsync(user, model.Password);
+            await _userManager.AddToRoleAsync(user, "Customer");
+            return Ok();
         }
     }
 }

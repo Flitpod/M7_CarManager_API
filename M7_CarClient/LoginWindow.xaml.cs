@@ -1,4 +1,5 @@
 ﻿using M7_CarClient.Model;
+using M7_CarClient.Windows;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,7 +50,8 @@ namespace M7_CarClient
 
         private void Button_SignUp_Click(object sender, RoutedEventArgs e)
         {
-
+            RegisterWindow registerWindow = new RegisterWindow();
+            registerWindow.ShowDialog();
         }
     }
 }
