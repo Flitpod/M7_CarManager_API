@@ -35,6 +35,9 @@ namespace M7_CarManager.Data
                 FirstName = _configuration["FirstName"],
                 LastName = _configuration["LastName"],
                 NormalizedUserName = _configuration["NormalizedUserName"],
+                NormalizedEmail = _configuration["Email"].ToUpper(),
+                SecurityStamp = Guid.NewGuid().ToString(),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
             };
             user.PasswordHash = passwordHasher.HashPassword(user, _configuration["Password"]);
 

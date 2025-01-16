@@ -364,3 +364,5 @@ FodyWeavers.xsd
 
 # Migrations
 Migrations/
+/M7_CarManager/Migrations/20241125200726_Init.cs
+/M7_CarManager/Migrations/ApiDbContextModelSnapshot.cs
