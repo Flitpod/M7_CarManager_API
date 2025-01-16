@@ -26,7 +26,7 @@ namespace M7_CarClient
             InitializeComponent();
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Login_Click(object sender, RoutedEventArgs e)
         {
             HttpClient client = new HttpClient();
             client.BaseAddress = new Uri("http://localhost:5041/");
@@ -45,6 +45,11 @@ namespace M7_CarClient
 
             MainWindow mainWindow = new MainWindow(token);
             mainWindow.ShowDialog();
+        }
+
+        private void Button_SignUp_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

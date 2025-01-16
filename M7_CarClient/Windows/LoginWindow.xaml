@@ -5,12 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:M7_CarClient"
         mc:Ignorable="d"
-        Title="LoginWindow" Height="240" Width="800">
+        Title="LoginWindow" Height="300" Width="800">
     <StackPanel>
         <Label Background="LightGoldenrodYellow" Padding="10">Username</Label>
         <TextBox x:Name="tb_username" Padding="10" />
         <Label Background="LightGoldenrodYellow" Padding="10">Password</Label>
         <PasswordBox x:Name="tb_password" Padding="10" />
-        <Button Content="Login" Click="Button_Click" Padding="10" Margin="10"/> 
+        <Button Content="Login" Click="Button_Login_Click" Padding="10" Margin="10"/> 
+        <Button Content="Sign up" Width="300" Background="LightBlue" Click="Button_SignUp_Click" Padding="10" Margin="10"/> 
     </StackPanel>
 </Window>
