@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:M7_CarClient.Windows"
         mc:Ignorable="d"
-        Title="RegisterWindow" Height="530" Width="800">
+        Title="RegisterWindow" Height="900" Width="800">
     <StackPanel>
         <Label Background="LightGoldenrodYellow" Padding="10">First name</Label>
         <TextBox x:Name="tb_firstName" Padding="10" />
@@ -25,6 +25,9 @@
         <Label Background="LightGoldenrodYellow" Padding="10">Password again</Label>
         <PasswordBox x:Name="tb_passwordAgain" Padding="10" />
 
-        <Button Content="Register" Padding="10" Click="Button_Register_Click" />
+        <Button Content="Upload Photo" Padding="10" Margin="10" Click="Button_UploadPhoto_Click" HorizontalAlignment="Left" Width="200"/>
+        <Image x:Name="img" Height="300" />
+
+        <Button Content="Register" Padding="10" Margin="10" Click="Button_Register_Click" />
     </StackPanel>
 </Window>

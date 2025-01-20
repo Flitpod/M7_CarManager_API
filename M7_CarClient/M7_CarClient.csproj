@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="6.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.36" />
+    <PackageReference Include="MimeMapping" Version="3.1.0" />
   </ItemGroup>
 
 </Project>
