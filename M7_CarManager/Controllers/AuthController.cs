@@ -83,6 +83,10 @@ namespace M7_CarManager.Controllers
         public async Task<IActionResult> GetUserInfos()
         {
             var user = _userManager.Users.FirstOrDefault(u => u.UserName == this.User.Identity.Name);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
             return Ok(new
             {
                 UserName = user.UserName,
