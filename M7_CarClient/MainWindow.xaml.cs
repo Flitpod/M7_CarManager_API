@@ -24,6 +24,7 @@ namespace M7_CarClient
         public ObservableCollection<Car> Cars { get; set; }
         public event PropertyChangedEventHandler? PropertyChanged;
         private UserInfo _userInfo;
+        private TokenModel _tokenModel;
         private Car _actualCar;
         public Car ActualCar
         {
@@ -38,11 +39,12 @@ namespace M7_CarClient
             }
         }
 
-        public MainWindow(TokenModel token)
+        public MainWindow(TokenModel tokenModel)
         {
             InitializeComponent();
 
-            RestClient_Init(token);
+            _tokenModel = tokenModel;
+            RestClient_Init(tokenModel);
             UserInfo_Init();
             CarsCollection_Init();
             SignalRHub_Init();
@@ -52,7 +54,7 @@ namespace M7_CarClient
         }
 
         // init methods
-        private void RestClient_Init(TokenModel token)
+        private void RestClient_Init(TokenModel tokenModel)
         {
             _httpClient = new HttpClient();
             _httpClient.BaseAddress = new Uri("http://localhost:5041");
@@ -62,24 +64,27 @@ namespace M7_CarClient
 
             // this will attach the token for every request to Car controller API
             _httpClient.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenModel.Token);
         }
         private void UserInfo_Init()
         {
-            // Dispatcher call is necessary due to UI label update (only can happen on UI Thread)
-            Dispatcher.InvokeAsync(async () =>
+            Task.Run(async () =>
             {
-                var response = await _httpClient.GetAsync("auth");
-                if (response.IsSuccessStatusCode)
-                {
-                    _userInfo = await response.Content.ReadAsAsync<UserInfo>();
-                    this.lb_profile_name.Content = $"{_userInfo.FirstName} {_userInfo.LastName}";
-                    if (_userInfo.PhotoData != null)
-                    {
-                        this.img_profile_photo.Source = ToImage(_userInfo.PhotoData);
-                    }
-                }
-            });
+                _userInfo = await GetUserInfosAsync();
+            })
+            .Wait();
+
+            this.lb_profile_name.Content = $"{_userInfo.FirstName} {_userInfo.LastName}";
+            this.img_profile_photo.Source = ToImage(_userInfo.PhotoData);
+        }
+        private async Task<UserInfo> GetUserInfosAsync()
+        {
+            var response = await _httpClient.GetAsync("auth");
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsAsync<UserInfo>();
+            }
+            throw new Exception("Something went wrong");
         }
         private BitmapImage ToImage(byte[] data)
         {
@@ -187,5 +192,18 @@ namespace M7_CarClient
             ShowIfError(response);
         }
 
+        private async void profile_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            ProfileWindow profileWindow = new ProfileWindow(_tokenModel);
+            if (profileWindow.ShowDialog() == true)
+            {
+                _userInfo = await GetUserInfosAsync();
+                lb_profile_name.Content = $"{_userInfo.FirstName} {_userInfo.LastName}";
+                if (_userInfo.PhotoData != null)
+                {
+                    img_profile_photo.Source = ToImage(_userInfo.PhotoData);
+                }
+            }
+        }
     }
 }

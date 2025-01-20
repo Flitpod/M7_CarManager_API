@@ -14,7 +14,7 @@ namespace M7_CarManager.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AuthController:ControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IConfiguration _configuration;
@@ -34,8 +34,8 @@ namespace M7_CarManager.Controllers
                 return Unauthorized();
             }
 
-            var claims = new List<Claim> 
-            { 
+            var claims = new List<Claim>
+            {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
@@ -112,9 +112,10 @@ namespace M7_CarManager.Controllers
             return BadRequest();
         }
 
+        [Route("[action]")]
         [Authorize]
-        [HttpPatch]
-        public async Task<IActionResult> UpdateProfile([FromBody] RegisterViewModel model)
+        [HttpPost]
+        public async Task<IActionResult> Update([FromBody] RegisterViewModel model)
         {
             var user = _userManager.Users.FirstOrDefault(u => u.UserName == this.User.Identity.Name);
             user.Email = model.Email;
@@ -123,6 +124,12 @@ namespace M7_CarManager.Controllers
             user.LastName = model.LastName;
             user.PhotoContentType = model.PhotoContentType;
             user.PhotoData = model.PhotoData;
+
+            if (model.Password != null && model.Password.Length > 0)
+            {
+                await _userManager.RemovePasswordAsync(user);
+                await _userManager.AddPasswordAsync(user, model.Password);
+            }
             await _userManager.UpdateAsync(user);
             return Ok();
         }

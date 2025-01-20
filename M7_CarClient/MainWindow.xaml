@@ -24,8 +24,8 @@
         </ListBox>
         <StackPanel Grid.Column="1" DataContext="{Binding ActualCar}">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Label FontSize="24" x:Name="lb_profile_name"></Label>
-                <Image x:Name="img_profile_photo" Height="40"/>
+                <Label FontSize="24" x:Name="lb_profile_name" MouseLeftButtonDown="profile_MouseLeftButtonDown"></Label>
+                <Image x:Name="img_profile_photo" Height="40" MouseLeftButtonDown="profile_MouseLeftButtonDown"/>
             </StackPanel>
             <Label Content="Model" Background="LightGoldenrodYellow" Padding="10" />
             <TextBox Text="{Binding Model}" Padding="10" />
