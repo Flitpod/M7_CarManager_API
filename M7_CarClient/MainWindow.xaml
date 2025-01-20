@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:M7_CarClient"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="480" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
@@ -23,6 +23,10 @@
             </ListBox.ItemTemplate>
         </ListBox>
         <StackPanel Grid.Column="1" DataContext="{Binding ActualCar}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Label FontSize="24" x:Name="lb_profile_name"></Label>
+                <Image x:Name="img_profile_photo" Height="40"/>
+            </StackPanel>
             <Label Content="Model" Background="LightGoldenrodYellow" Padding="10" />
             <TextBox Text="{Binding Model}" Padding="10" />
             <Label Content="Plate number" Background="LightGoldenrodYellow" Padding="10" />

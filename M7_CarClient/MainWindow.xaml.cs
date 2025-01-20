@@ -2,17 +2,11 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Net.Http;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+
 
 namespace M7_CarClient
 {
@@ -29,6 +23,7 @@ namespace M7_CarClient
         // ViewModel should be contained members
         public ObservableCollection<Car> Cars { get; set; }
         public event PropertyChangedEventHandler? PropertyChanged;
+        private UserInfo _userInfo;
         private Car _actualCar;
         public Car ActualCar
         {
@@ -48,8 +43,9 @@ namespace M7_CarClient
             InitializeComponent();
 
             RestClient_Init(token);
+            UserInfo_Init();
             CarsCollection_Init();
-            SignalRHub_Init();           
+            SignalRHub_Init();
 
             // set datacontext of mainwindow
             this.DataContext = this;
@@ -65,9 +61,39 @@ namespace M7_CarClient
                 new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 
             // this will attach the token for every request to Car controller API
-            _httpClient.DefaultRequestHeaders.Authorization = 
+            _httpClient.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
         }
+        private void UserInfo_Init()
+        {
+            // Dispatcher call is necessary due to UI label update (only can happen on UI Thread)
+            Dispatcher.InvokeAsync(async () =>
+            {
+                var response = await _httpClient.GetAsync("auth");
+                if (response.IsSuccessStatusCode)
+                {
+                    _userInfo = await response.Content.ReadAsAsync<UserInfo>();
+                    this.lb_profile_name.Content = $"{_userInfo.FirstName} {_userInfo.LastName}";
+                    if (_userInfo.PhotoData != null)
+                    {
+                        this.img_profile_photo.Source = ToImage(_userInfo.PhotoData);
+                    }
+                }
+            });
+        }
+        private BitmapImage ToImage(byte[] data)
+        {
+            using (MemoryStream ms = new MemoryStream(data))
+            {
+                BitmapImage bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.StreamSource = ms;
+                bitmapImage.EndInit();
+                return bitmapImage;
+            }
+        }
+
         private void CarsCollection_Init()
         {
             Task.Run(async () =>
