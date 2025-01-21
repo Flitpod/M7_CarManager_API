@@ -1,5 +1,6 @@
 ﻿using M7_CarClient.Model;
 using Microsoft.AspNetCore.SignalR.Client;
+using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -164,7 +165,8 @@ namespace M7_CarClient
         {
             if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
-                var error = await response.Content.ReadAsAsync<ErrorModel>();
+                var content = await response.Content.ReadAsStringAsync();
+                var error = JsonConvert.DeserializeObject<ErrorModel>(content);
                 MessageBox.Show(
                     messageBoxText: $"{error.Message} at: {error.Date}",
                     caption: "Error",

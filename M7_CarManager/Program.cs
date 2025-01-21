@@ -11,7 +11,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddSingleton<ICarRepository, CarRepository>();
+builder.Services.AddTransient<ICarRepository, CarRepository>();
 builder.Services.AddControllers(opt =>
 {
     opt.Filters.Add<ApiExceptionFilter>();
@@ -20,7 +20,9 @@ builder.Services.AddControllers(opt =>
 // Add DbContext
 builder.Services.AddDbContext<ApiDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options
+        .UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+        .UseLazyLoadingProxies();
 });
 
 // Add user and role management

@@ -9,12 +9,13 @@ namespace M7_CarManager.Data
     public class ApiDbContext : IdentityDbContext<AppUser>
     {
         private readonly IConfiguration _configuration;
+        public DbSet<AppUser> AppUsers { get; set; }
+        public DbSet<Car> Cars { get; set; }
+
         public ApiDbContext(DbContextOptions<ApiDbContext> opt, IConfiguration configuration) : base(opt)
         {
             _configuration = configuration;
         }
-
-        public DbSet<AppUser> AppUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -42,6 +43,14 @@ namespace M7_CarManager.Data
             user.PasswordHash = passwordHasher.HashPassword(user, _configuration["Password"]);
 
             builder.Entity<AppUser>().HasData(user);
+            builder.Entity<Car>()
+                .HasOne(car => car.Owner)
+                .WithMany()
+                .HasForeignKey(car => car.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Car>()
+                .HasData(new Car() { Model = "Opel Astra", PlateNumber = "AAA-111", Price = 2000 });
 
             base.OnModelCreating(builder);
         }

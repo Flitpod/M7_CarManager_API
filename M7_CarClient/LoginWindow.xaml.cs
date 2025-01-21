@@ -41,11 +41,18 @@ namespace M7_CarClient
                 Password = tb_password.Password
             });
 
-            var token = await response.Content.ReadAsAsync<TokenModel>();
-            token.Expiration = token.Expiration.ToLocalTime();
+            if (response.IsSuccessStatusCode)
+            {
+                var token = await response.Content.ReadAsAsync<TokenModel>();
+                token.Expiration = token.Expiration.ToLocalTime();
 
-            MainWindow mainWindow = new MainWindow(token);
-            mainWindow.ShowDialog();
+                MainWindow mainWindow = new MainWindow(token);
+                mainWindow.ShowDialog();
+            } 
+            else
+            {
+                MessageBox.Show(messageBoxText: "Username or password was wrong!");
+            }
         }
 
         private void Button_SignUp_Click(object sender, RoutedEventArgs e)

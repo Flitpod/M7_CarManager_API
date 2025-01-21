@@ -2,26 +2,29 @@
 using M7_CarManager.Hubs;
 using M7_CarManager.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
 namespace M7_CarManager.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class CarController : ControllerBase
     {
-        ICarRepository _carRepository;
-        IHubContext<EventHub> _eventHub;
+        private readonly ICarRepository _carRepository;
+        private readonly IHubContext<EventHub> _eventHub;
+        private readonly UserManager<AppUser> _userManager;
 
-        public CarController(ICarRepository carRepository, IHubContext<EventHub> eventHub)
+        public CarController(ICarRepository carRepository, IHubContext<EventHub> eventHub, UserManager<AppUser> userManager)
         {
             _carRepository = carRepository;
             _eventHub = eventHub;
+            _userManager = userManager;
         }
 
         [HttpGet]
-        [Authorize]
         public IEnumerable<Car> GetCars()
         {
             return _carRepository.Read();
@@ -36,25 +39,43 @@ namespace M7_CarManager.Controllers
         [HttpPost]
         public async Task<IActionResult> AddCar([FromBody] Car car)
         {
+            var user = _userManager.Users.FirstOrDefault(u => u.UserName == this.User.Identity.Name);
+            car.OwnerId = user?.Id;
             _carRepository.Create(car);
             await _eventHub.Clients.All.SendAsync("carCreated", car);
             return Ok(car);
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateCar([FromBody] Car car) 
+        public async Task<IActionResult> UpdateCar([FromBody] Car car)
         {
-            _carRepository.Update(car, out Car oldCar);
-            await _eventHub.Clients.All.SendAsync("carUpdated", oldCar);
-            return Ok(oldCar);
+            var oldCar = _carRepository.Read(car.Id);
+            if (oldCar.Owner.UserName == this.User.Identity.Name)
+            {
+                _carRepository.Update(car, out oldCar);
+                await _eventHub.Clients.All.SendAsync("carUpdated", oldCar);
+                return Ok(oldCar);
+            }
+            else
+            {
+                throw new Exception("Not your car!");
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCar(string id)
         {
-            _carRepository.Delete(id);
-            await _eventHub.Clients.All.SendAsync("carDeleted", id);
-            return Ok(id);
+            var oldCar = _carRepository.Read(id);
+            if (oldCar.Owner.UserName == this.User.Identity.Name)
+            {
+                _carRepository.Delete(id);
+                await _eventHub.Clients.All.SendAsync("carDeleted", id);
+                return Ok(id);
+            }
+            else
+            {
+                throw new Exception("Not your car!");
+            }
         }
     }
 }
