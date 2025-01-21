@@ -9,6 +9,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="SocialLoginWindows\Buttons\email.png" />
+    <None Remove="SocialLoginWindows\Buttons\facebook.png" />
+    <None Remove="SocialLoginWindows\Buttons\google.png" />
+    <None Remove="SocialLoginWindows\Buttons\microsoft.png" />
+    <None Remove="SocialLoginWindows\Buttons\signup.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="SocialLoginWindows\Buttons\email.png" />
+    <Content Include="SocialLoginWindows\Buttons\facebook.png" />
+    <Content Include="SocialLoginWindows\Buttons\google.png" />
+    <Content Include="SocialLoginWindows\Buttons\microsoft.png" />
+    <Content Include="SocialLoginWindows\Buttons\signup.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="6.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.36" />
     <PackageReference Include="MimeMapping" Version="3.1.0" />
