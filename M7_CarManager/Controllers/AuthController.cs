@@ -133,5 +133,119 @@ namespace M7_CarManager.Controllers
             await _userManager.UpdateAsync(user);
             return Ok();
         }
+
+        // Social Login
+        [Route("[action]")]
+        [HttpPost]
+        public async Task<IActionResult> Microsoft([FromBody] SocialToken token)
+        {
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri("https://graph.microsoft.com");
+            client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
+            var response = await client.GetAsync("/oidc/userinfo");
+            MsModel? userInfo = new MsModel();
+            if (response.IsSuccessStatusCode)
+            {
+                userInfo = await response.Content.ReadFromJsonAsync<MsModel>();
+                AppUser user = new AppUser
+                {
+                    FirstName = userInfo.given_name,
+                    LastName = userInfo.family_name,
+                    Email = userInfo.email,
+                    UserName = userInfo.email,
+                    EmailConfirmed = true
+                };
+                return await SocialAuth(user);
+            }
+            return BadRequest(new ErrorModel() { Message = "Ms login failed" });
+        }
+
+        [Route("[action")]
+        [HttpPost]
+        public async Task<IActionResult> Facebook([FromBody] SocialToken token)
+        {
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri("https://graph.facebook.com");
+            client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            var response = await client.GetAsync($"me?fields=first_name,last_name,picture,email&access_token={token.Token}");
+            var result = await response.Content.ReadFromJsonAsync<FbModel>();
+            if (result != null)
+            {
+                AppUser user = new AppUser
+                {
+                    FirstName = result.last_name,
+                    LastName = result.first_name,
+                    Email = result.email,
+                    UserName = result.email,
+                };
+                return await SocialAuth(user);
+            }
+            return Unauthorized();
+        }
+
+        [Route("[action")]
+        [HttpPost]
+        public async Task<IActionResult> Google([FromBody] SocialToken token)
+        {
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri("https://oauth2.googleapis.com");
+            client.DefaultRequestHeaders.Accept.Add(
+            new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            var response = await client.GetAsync($"tokeninfo?id_token={token.Token}");
+            var result = await response.Content.ReadFromJsonAsync<GoogleModel>();
+            if (result != null)
+            {
+                AppUser user = new AppUser
+                {
+                    FirstName = result.given_name,
+                    LastName = result.family_name,
+                    Email = result.email,
+                    UserName = result.email,
+                };
+                return await SocialAuth(user);
+            }
+            return Unauthorized();
+        }
+
+        private async Task<IActionResult> SocialAuth(AppUser user)
+        {
+            if (_userManager.Users.FirstOrDefault(t => t.Email == user.Email) == null)
+            {
+                var res = await _userManager.CreateAsync(user);
+                if (res.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Customer");
+                }
+            }
+            var appuser = await _userManager.FindByEmailAsync(user.Email);
+            if (appuser != null)
+            {
+                var claim = new List<Claim> {
+                    new Claim(JwtRegisteredClaimNames.Sub, appuser.UserName),
+                    new Claim(JwtRegisteredClaimNames.NameId, appuser.UserName),
+                    new Claim(JwtRegisteredClaimNames.Name, appuser.UserName)
+                    };
+                foreach (var role in await _userManager.GetRolesAsync(appuser))
+                {
+                    claim.Add(new Claim(ClaimTypes.Role, role));
+                }
+
+                var signinKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["SecretKey"]));
+                var token = new JwtSecurityToken(
+                    issuer: "http://www.security.org", 
+                    audience: "http://www.security.org",
+                    claims: claim, 
+                    expires: DateTime.Now.AddMinutes(60),
+                    signingCredentials: new SigningCredentials(signinKey, SecurityAlgorithms.HmacSha256)
+                );
+                return Ok(new
+                {
+                    token = new JwtSecurityTokenHandler().WriteToken(token),
+                    expiration = token.ValidTo
+                });
+            }
+            return Unauthorized();
+        }
     }
 }
